@@ -28,12 +28,12 @@
     <div class="card border-0 shadow-sm p-4 mb-4" style="background: linear-gradient(135deg, #4A90D9, #357ABD); color: #fff;">
         <div class="row align-items-center g-3">
             <div class="col-md-7 d-flex align-items-center gap-3">
-                <img id="childAvatar" src="https://cdn-icons-png.flaticon.com/512/4140/4140048.png"
+                <img id="childAvatar" src=""
                      alt="Child Avatar" class="rounded-circle border border-3 border-white"
                      style="width: 80px; height: 80px; object-fit: cover; background: #fff;">
                 <div>
                     <h2 id="childGreeting" class="fw-bold mb-1">Hello!</h2>
-                    <p class="mb-0 opacity-75">Tap each activity card when you finish!</p>
+                    <p class="mb-0 opacity-75">Tap the speaker to listen, or tap the card when finished!</p>
                 </div>
             </div>
             <div class="col-md-5 text-md-end">
@@ -130,9 +130,10 @@
 
         container.innerHTML = currentTasks.map(t => {
             const isDone = t.status === 'completed';
+            const safeName = t.name.replace(/'/g, "\\'");
             return `
             <div class="card p-4 shadow-sm child-task-card cat-${t.category} ${isDone ? 'completed' : ''}"
-                 onclick="toggleTask(${t.id})">
+                 onclick="toggleTask(${t.id}, '${safeName}')">
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                     <div class="d-flex align-items-center gap-4">
                         <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm"
@@ -146,8 +147,13 @@
                             </div>
                         </div>
                     </div>
-                    <div>
-                        <button class="btn ${isDone ? 'btn-success' : 'btn-primary'} btn-lg px-4 py-3 fs-5">
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-light border btn-lg px-3 py-3"
+                                title="Read Aloud"
+                                onclick="event.stopPropagation(); speakText('${safeName} at ${formatTime12Hr(t.task_time)}');">
+                            <i class="fa-solid fa-volume-high text-primary fa-lg"></i>
+                        </button>
+                        <button type="button" class="btn ${isDone ? 'btn-success' : 'btn-primary'} btn-lg px-4 py-3 fs-5">
                             <i class="fa-solid ${isDone ? 'fa-circle-check' : 'fa-hand-pointer'} me-2"></i>
                             ${isDone ? 'Done! ⭐' : 'Tap When Done'}
                         </button>
@@ -157,10 +163,12 @@
         }).join('');
     }
 
-    async function toggleTask(taskId) {
+    async function toggleTask(taskId, taskName) {
         const res = await api.patch(`/tasks/${taskId}/complete`);
         if (res.status === 'completed') {
             playSuccessSound();
+            speakText(`Great job finishing ${taskName}!`);
+            showToast(`Great job! "${taskName}" completed! ⭐`);
         }
         currentTasks = await api.get(`/tasks/${currentScheduleId}`);
         renderChildTasks();
