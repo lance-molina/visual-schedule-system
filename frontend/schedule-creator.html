@@ -229,7 +229,7 @@
                         <div>
                             <div class="fw-bold">${t.name}</div>
                             <div class="small text-muted">
-                                <i class="fa-regular fa-clock me-1"></i>${t.task_time} (${t.duration} mins)
+                                <i class="fa-regular fa-clock me-1"></i>${formatTime12Hr(t.task_time)} (${t.duration} mins)
                                 ${t.reminder ? '<i class="fa-solid fa-bell ms-2 text-warning"></i>' : ''}
                             </div>
                         </div>
