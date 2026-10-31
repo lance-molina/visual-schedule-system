@@ -192,3 +192,26 @@ function getChildAvatar(child) {
     const gender = (child && child.gender === 'Female') ? 'Female' : 'Male';
     return DEFAULT_CHILD_AVATARS[gender];
 }
+
+function showToast(message, type = 'success') {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = ' position-fixed bottom-0 end-0 p-3';
+        container.style.zIndex = '9999';
+        document.body.appendChild(container);
+    }
+    const toastEl = document.createElement('div');
+    const bgClass = type === 'danger' ? 'bg-danger' : 'bg-success';
+    toastEl.className = `toast align-items-center text-white ${bgClass} border-0 show mb-2 shadow`;
+    toastEl.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body fw-semibold">
+                <i class="fa-solid ${type === 'danger' ? 'fa-circle-exclamation' : 'fa-circle-check'} me-2"></i>${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.parentElement.remove()"></button>
+        </div>`;
+    container.appendChild(toastEl);
+    setTimeout(() => toastEl.remove(), 3000);
+}
