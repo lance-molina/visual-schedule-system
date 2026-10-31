@@ -142,7 +142,7 @@
                         <div>
                             <h3 class="fw-bold mb-1 ${isDone ? 'text-decoration-line-through text-muted' : ''}">${t.name}</h3>
                             <div class="fs-5 text-muted">
-                                <i class="fa-regular fa-clock me-1"></i> ${t.task_time} &bull; ${t.duration} mins
+                                <i class="fa-regular fa-clock me-1"></i> ${formatTime12Hr(t.task_time)} &bull; ${t.duration} mins
                             </div>
                         </div>
                     </div>
