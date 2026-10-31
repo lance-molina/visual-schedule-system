@@ -59,16 +59,22 @@ INSERT INTO children (id, user_id, name, age, gender, delay_domain, notes, photo
 (2, 1, 'Sofia Cruz', 5, 'Female', 'Speech & Language Delay', 'Needs audio cues turned on for morning routines.', ''),
 (3, 1, 'Noah Bautista', 7, 'Male', 'Fine Motor Delay', 'Requires extra time for dressing and brushing teeth.', '');
 
--- Seed Today's Schedule for Child 1 (Lucas)
+-- Seed Today's Schedules for All 3 Children
 INSERT INTO schedules (id, child_id, schedule_date) VALUES
 (1, 1, CURDATE()),
 (2, 2, CURDATE()),
 (3, 3, CURDATE());
 
--- Seed Sample Tasks for Schedule 1
+-- Seed Sample Tasks for Lucas (Schedule 1), Sofia (Schedule 2), and Noah (Schedule 3)
 INSERT INTO tasks (schedule_id, name, category, icon, task_time, duration, reminder, status, completed_at) VALUES
 (1, 'Brushing Teeth', 'hygiene', 'fa-tooth', '07:30:00', 10, 1, 'completed', NOW()),
 (1, 'Eating Breakfast', 'food', 'fa-utensils', '08:00:00', 25, 1, 'completed', NOW()),
 (1, 'Dressing Up', 'hygiene', 'fa-shirt', '08:30:00', 15, 1, 'pending', NULL),
 (1, 'School Reading Time', 'school', 'fa-book-open', '09:00:00', 30, 1, 'pending', NULL),
-(1, 'Play with Blocks', 'play', 'fa-shapes', '10:00:00', 20, 0, 'pending', NULL);
+(1, 'Play with Blocks', 'play', 'fa-shapes', '10:00:00', 20, 0, 'pending', NULL),
+(2, 'Washing Hands', 'hygiene', 'fa-hands-bubbles', '08:00:00', 5, 1, 'completed', NOW()),
+(2, 'Eating Meal', 'food', 'fa-utensils', '08:30:00', 25, 1, 'pending', NULL),
+(2, 'School Reading', 'school', 'fa-book-open', '09:30:00', 30, 1, 'pending', NULL),
+(3, 'Brushing Teeth', 'hygiene', 'fa-tooth', '07:45:00', 10, 1, 'completed', NOW()),
+(3, 'Dressing Up', 'hygiene', 'fa-shirt', '08:15:00', 15, 1, 'completed', NOW()),
+(3, 'Play with Blocks', 'play', 'fa-shapes', '09:00:00', 20, 0, 'completed', NOW());
