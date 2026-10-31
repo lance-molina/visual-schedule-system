@@ -99,11 +99,6 @@ body.high-contrast .text-muted {
     color: #FFFFFF !important;
 }
 
-.timeline-card.selected-task {
-    outline: 3px solid var(--primary-blue);
-    box-shadow: 0 0 0 4px rgba(74, 144, 217, 0.25) !important;
-}
-
 /* Category Color Coding (Part 3) */
 .cat-hygiene { border-left: 8px solid #4A90D9 !important; background-color: #EBF4FC; }
 .cat-food    { border-left: 8px solid #7ED321 !important; background-color: #F2FAE9; }
@@ -115,7 +110,7 @@ body.high-contrast .text-muted {
 .badge-school  { background-color: #F5A623; color: #2C1D00; }
 .badge-play    { background-color: #9B51E0; color: #fff; }
 
-/* Drag and Drop Schedule Creator (Part 3) */
+/* Drag and Drop Schedule Creator & Selected Task Highlight (#3) */
 .activity-item {
     cursor: grab;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
@@ -124,6 +119,13 @@ body.high-contrast .text-muted {
 .activity-item:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+.timeline-card {
+    transition: all 0.15s ease;
+}
+.timeline-card.selected-task {
+    outline: 3px solid var(--primary-blue);
+    box-shadow: 0 0 0 4px rgba(74, 144, 217, 0.25) !important;
 }
 .drop-zone {
     min-height: 420px;
