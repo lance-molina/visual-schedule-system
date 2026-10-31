@@ -99,6 +99,11 @@ body.high-contrast .text-muted {
     color: #FFFFFF !important;
 }
 
+.timeline-card.selected-task {
+    outline: 3px solid var(--primary-blue);
+    box-shadow: 0 0 0 4px rgba(74, 144, 217, 0.25) !important;
+}
+
 /* Category Color Coding (Part 3) */
 .cat-hygiene { border-left: 8px solid #4A90D9 !important; background-color: #EBF4FC; }
 .cat-food    { border-left: 8px solid #7ED321 !important; background-color: #F2FAE9; }
