@@ -305,7 +305,7 @@
         e.preventDefault();
         const id = document.getElementById('selectedTaskId').value;
         if (!id) {
-            alert('Click a task in the Daily Timeline first to edit its settings.');
+            showToast('Click a task in the Daily Timeline first to edit its settings.');
             return;
         }
         await api.put(`/tasks/${id}`, {
@@ -318,12 +318,12 @@
         });
         currentTasks = await api.get(`/tasks/${currentScheduleId}`);
         renderTimeline();
-        alert('Task settings updated!');
+        showToast('Task settings updated!');
     });
 
     function saveScheduleNotification() {
         playSuccessSound();
-        alert('Daily schedule saved to database!');
+        showToast('Daily schedule saved to database!');
     }
 
     function previewInChildView() {
