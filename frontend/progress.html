@@ -207,8 +207,25 @@
         lineChart.update();
     }
 
-    function exportReport() {
-        showToast('Progress Report exported as CSV/PDF summary!');
+    async function exportReport() {
+        try {
+            const children = await api.get('/children');
+            let csv = 'Child Name,Age,Gender,Developmental Domain,Completed Tasks,Total Tasks,Completion Rate\n';
+            children.forEach(c => {
+                const done = c.completed_tasks || 0;
+                const total = c.total_tasks || 0;
+                const rate = total > 0 ? Math.round((done / total) * 100) + '%' : '0%';
+                csv += `"${c.name}",${c.age},${c.gender || 'Male'},"${c.delay_domain}",${done},${total},${rate}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `visual_schedule_progress_${new Date().toISOString().slice(0, 10)}.csv`;
+            link.click();
+            showToast('Progress report downloaded as CSV!');
+        } catch (err) {
+            showToast('Failed to export report', 'danger');
+        }
     }
 
     loadAnalytics();
