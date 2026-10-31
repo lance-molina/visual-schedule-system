@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule Creator | Visual Schedule System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-md bg-white border-bottom px-3 py-2">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2" href="dashboard.html">
+            <i class="fa-solid fa-calendar-check"></i> Visual Schedule
+        </a>
+        <button class="navbar-toggler touch-target" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="d-none d-md-flex align-items-center gap-3">
+            <div class="text-end">
+                <div id="navUserName" class="fw-bold">Caregiver</div>
+                <small id="navUserRole" class="text-muted">Role</small>
+            </div>
+            <button onclick="api.logout()" class="btn btn-outline-danger btn-sm">Logout</button>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 sidebar collapse d-md-block p-3" id="sidebarMenu">
+            <nav class="nav flex-column">
+                <a class="nav-link" href="dashboard.html"><i class="fa-solid fa-house"></i> <span data-i18n="dashboard">Dashboard</span></a>
+                <a class="nav-link" href="schedule-creator.html"><i class="fa-solid fa-calendar-plus"></i> <span data-i18n="schedules">Schedule Creator</span></a>
+                <a class="nav-link" href="child-view.html"><i class="fa-solid fa-child-reaching"></i> <span data-i18n="childView">Child View</span></a>
+                <a class="nav-link" href="progress.html"><i class="fa-solid fa-chart-column"></i> <span data-i18n="progress">Progress</span></a>
+                <a class="nav-link" href="settings.html"><i class="fa-solid fa-gear"></i> <span data-i18n="settings">Settings</span></a>
+            </nav>
+        </div>
+
+        <!-- Main 3-Panel Builder -->
+        <main class="col-md-9 col-lg-10 p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+                <div>
+                    <h2 class="fw-bold mb-0">Visual Schedule Creator</h2>
+                    <p class="text-muted mb-0">Drag activities into the timeline or tap "+" to add</p>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <label class="fw-semibold text-nowrap mb-0">Select Child:</label>
+                    <select id="childSelector" class="form-select w-auto" style="min-width: 200px;"></select>
+                    <button onclick="previewInChildView()" class="btn btn-warning text-nowrap px-3">
+                        <i class="fa-solid fa-eye me-2"></i>Preview Schedule
+                    </button>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- LEFT PANEL: Activity Library -->
+                <div class="col-lg-3">
+                    <div class="card border-0 shadow-sm p-3 h-100">
+                        <h5 class="fw-bold mb-3"><i class="fa-solid fa-shapes me-2 text-primary"></i>Activity Library</h5>
+                        <p class="small text-muted">Drag to center timeline or click <strong>+</strong></p>
+                        <div id="activityLibrary" class="d-flex flex-column gap-2"></div>
+                    </div>
+                </div>
+
+                <!-- CENTER PANEL: Daily Schedule Timeline (Drop Zone) -->
+                <div class="col-lg-5">
+                    <div class="card border-0 shadow-sm p-3 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0"><i class="fa-solid fa-timeline me-2 text-success"></i>Daily Timeline</h5>
+                            <span id="taskCountBadge" class="badge bg-secondary">0 Tasks</span>
+                        </div>
+                        <div id="timelineDropZone" class="drop-zone d-flex flex-column gap-3"></div>
+                    </div>
+                </div>
+
+                <!-- RIGHT PANEL: Task Settings -->
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm p-3 h-100">
+                        <h5 class="fw-bold mb-3"><i class="fa-solid fa-sliders me-2 text-warning"></i>Task Settings</h5>
+                        <form id="taskSettingsForm">
+                            <input type="hidden" id="selectedTaskId">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Activity Name</label>
+                                <input type="text" id="settingName" class="form-control" placeholder="Select or add a task" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Category</label>
+                                <select id="settingCategory" class="form-select">
+                                    <option value="hygiene">Hygiene (Blue)</option>
+                                    <option value="food">Food / Meals (Green)</option>
+                                    <option value="school">School / Learning (Yellow)</option>
+                                    <option value="play">Play / Recreation (Purple)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Scheduled Time</label>
+                                <input type="time" id="settingTime" class="form-control" value="08:00" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Duration (Minutes)</label>
+                                <input type="number" id="settingDuration" class="form-control" value="15" min="5" max="180" required>
+                            </div>
+                            <div class="form-check form-switch mb-4">
+                                <input class="form-check-input" type="checkbox" id="settingReminder" checked>
+                                <label class="form-check-label fw-semibold" for="settingReminder">Audio / Visual Reminder</label>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fa-solid fa-floppy-disk me-2"></i> Save Task Settings
+                                </button>
+                                <button type="button" onclick="saveScheduleNotification()" class="btn btn-success">
+                                    <i class="fa-solid fa-check-double me-2"></i> Save Schedule
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/script.js"></script>
+<script>
+    api.requireAuth();
+    renderNavbarAndSidebar('schedule-creator.html');
+
+    const presetActivities = [
+        { name: 'Eating Meal', category: 'food', icon: 'fa-utensils', duration: 25 },
+        { name: 'Brushing Teeth', category: 'hygiene', icon: 'fa-tooth', duration: 10 },
+        { name: 'Dressing Up', category: 'hygiene', icon: 'fa-shirt', duration: 15 },
+        { name: 'Toileting', category: 'hygiene', icon: 'fa-restroom', duration: 10 },
+        { name: 'Washing Hands', category: 'hygiene', icon: 'fa-hands-bubbles', duration: 5 },
+        { name: 'School Reading', category: 'school', icon: 'fa-book-open', duration: 30 },
+        { name: 'Play with Blocks', category: 'play', icon: 'fa-shapes', duration: 20 }
+    ];
+
+    let currentChildId = null;
+    let currentScheduleId = null;
+    let currentTasks = [];
+    let selectedTask = null;
+
+    function renderActivityLibrary() {
+        const lib = document.getElementById('activityLibrary');
+        lib.innerHTML = presetActivities.map((act, idx) => `
+            <div class="card p-2 activity-item cat-${act.category}" draggable="true" ondragstart="onDragStart(event, ${idx})">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid ${act.icon} fa-lg"></i>
+                        <div>
+                            <div class="fw-bold small">${act.name}</div>
+                            <span class="badge badge-${act.category} text-uppercase" style="font-size:10px;">${act.category}</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-light" onclick="addActivityToTimeline(${idx})" title="Add to Schedule">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function onDragStart(e, presetIndex) {
+        e.dataTransfer.setData('text/plain', presetIndex);
+    }
+
+    const dropZone = document.getElementById('timelineDropZone');
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const idx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+        if (!isNaN(idx)) addActivityToTimeline(idx);
+    });
+
+    async function initPage() {
+        renderActivityLibrary();
+        const children = await api.get('/children');
+        const selector = document.getElementById('childSelector');
+        selector.innerHTML = children.map(c => `<option value="${c.id}">${c.name} (${c.age} yrs)</option>`).join('');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramChild = urlParams.get('child_id');
+        if (paramChild && children.some(c => c.id == paramChild)) {
+            selector.value = paramChild;
+        }
+
+        selector.addEventListener('change', () => loadChildSchedule(selector.value));
+        if (children.length > 0) {
+            loadChildSchedule(selector.value);
+        }
+    }
+
+    async function loadChildSchedule(childId) {
+        currentChildId = childId;
+        const schedules = await api.get(`/schedules/${childId}`);
+        currentScheduleId = schedules[0].id;
+        currentTasks = await api.get(`/tasks/${currentScheduleId}`);
+        renderTimeline();
+    }
+
+    function renderTimeline() {
+        document.getElementById('taskCountBadge').textContent = `${currentTasks.length} Tasks`;
+        if (!currentTasks.length) {
+            dropZone.innerHTML = `
+                <div class="text-center text-muted my-auto py-5">
+                    <i class="fa-solid fa-arrows-down-to-line fa-2x mb-2"></i>
+                    <p class="mb-0">Drag activities here or click "+" on any activity</p>
+                </div>`;
+            return;
+        }
+
+        dropZone.innerHTML = currentTasks.map((t, index) => `
+            <div class="card p-3 shadow-sm cat-${t.category}" onclick="selectTaskForEdit(${t.id})" style="cursor:pointer;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fa-solid ${t.icon} fa-2x"></i>
+                        <div>
+                            <div class="fw-bold">${t.name}</div>
+                            <div class="small text-muted">
+                                <i class="fa-regular fa-clock me-1"></i>${t.task_time} (${t.duration} mins)
+                                ${t.reminder ? '<i class="fa-solid fa-bell ms-2 text-warning"></i>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-1" onclick="event.stopPropagation();">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="moveTask(${index}, -1)" ${index === 0 ? 'disabled' : ''}>
+                            <i class="fa-solid fa-arrow-up"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="moveTask(${index}, 1)" ${index === currentTasks.length - 1 ? 'disabled' : ''}>
+                            <i class="fa-solid fa-arrow-down"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="removeTask(${t.id})">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function addActivityToTimeline(presetIndex) {
+        if (!currentScheduleId) return;
+        const act = presetActivities[presetIndex];
+        const nextHour = 8 + currentTasks.length;
+        const defaultTime = `${String(nextHour > 20 ? 8 : nextHour).padStart(2, '0')}:00`;
+
+        const res = await api.post('/tasks', {
+            schedule_id: currentScheduleId,
+            name: act.name,
+            category: act.category,
+            icon: act.icon,
+            time: defaultTime,
+            duration: act.duration,
+            reminder: true
+        });
+        currentTasks = await api.get(`/tasks/${currentScheduleId}`);
+        renderTimeline();
+        selectTaskForEdit(res.id);
+    }
+
+    function selectTaskForEdit(taskId) {
+        selectedTask = currentTasks.find(t => t.id === taskId);
+        if (!selectedTask) return;
+        document.getElementById('selectedTaskId').value = selectedTask.id;
+        document.getElementById('settingName').value = selectedTask.name;
+        document.getElementById('settingCategory').value = selectedTask.category;
+        document.getElementById('settingTime').value = selectedTask.task_time;
+        document.getElementById('settingDuration').value = selectedTask.duration;
+        document.getElementById('settingReminder').checked = selectedTask.reminder;
+    }
+
+    async function moveTask(index, direction) {
+        const targetIndex = index + direction;
+        if (targetIndex < 0 || targetIndex >= currentTasks.length) return;
+        const taskA = currentTasks[index];
+        const taskB = currentTasks[targetIndex];
+
+        // Swap times so order persists cleanly
+        const tempTime = taskA.task_time;
+        await api.put(`/tasks/${taskA.id}`, { ...taskA, time: taskB.task_time });
+        await api.put(`/tasks/${taskB.id}`, { ...taskB, time: tempTime });
+        currentTasks = await api.get(`/tasks/${currentScheduleId}`);
+        renderTimeline();
+    }
+
+    async function removeTask(taskId) {
+        await api.delete(`/tasks/${taskId}`);
+        currentTasks = await api.get(`/tasks/${currentScheduleId}`);
+        renderTimeline();
+    }
+
+    document.getElementById('taskSettingsForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('selectedTaskId').value;
+        if (!id) {
+            alert('Click a task in the Daily Timeline first to edit its settings.');
+            return;
+        }
+        await api.put(`/tasks/${id}`, {
+            name: document.getElementById('settingName').value.trim(),
+            category: document.getElementById('settingCategory').value,
+            icon: selectedTask ? selectedTask.icon : 'fa-star',
+            time: document.getElementById('settingTime').value,
+            duration: parseInt(document.getElementById('settingDuration').value, 10),
+            reminder: document.getElementById('settingReminder').checked
+        });
+        currentTasks = await api.get(`/tasks/${currentScheduleId}`);
+        renderTimeline();
+        alert('Task settings updated!');
+    });
+
+    function saveScheduleNotification() {
+        playSuccessSound();
+        alert('Daily schedule saved to database!');
+    }
+
+    function previewInChildView() {
+        window.location.href = `child-view.html?child_id=${currentChildId}`;
+    }
+
+    initPage();
+</script>
+</body>
+</html>

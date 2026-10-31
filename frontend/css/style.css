@@ -1,0 +1,159 @@
+:root {
+    --primary-blue: #4A90D9;
+    --success-green: #7ED321;
+    --warning-yellow: #F5A623;
+    --bg-soft: #F4F8FB;
+    --card-radius: 12px;
+    --base-font-size: 16px;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: var(--base-font-size);
+    background-color: var(--bg-soft);
+    color: #2C3E50;
+    margin: 0;
+    padding: 0;
+}
+
+/* Accessibility Font Sizes (Part 5) */
+body.font-small { font-size: 16px; }
+body.font-medium { font-size: 18px; }
+body.font-large { font-size: 21px; }
+
+/* Accessibility High Contrast Mode (Part 5) */
+body.high-contrast {
+    background-color: #000000 !important;
+    color: #FFFFFF !important;
+}
+body.high-contrast .card,
+body.high-contrast .sidebar,
+body.high-contrast .navbar,
+body.high-contrast .modal-content {
+    background-color: #121212 !important;
+    color: #FFFFFF !important;
+    border: 2px solid #FFFF00 !important;
+}
+body.high-contrast .text-muted {
+    color: #E0E0E0 !important;
+}
+
+/* Rounded Corners & Touch-Friendly Standards (Part 1 & Responsive Guide) */
+.card, .btn, .form-control, .form-select, .modal-content, .alert {
+    border-radius: var(--card-radius) !important;
+}
+
+.btn, .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.btn-sm {
+    min-height: 36px;
+    min-width: 36px;
+    padding: 6px 10px;
+}
+
+.btn-primary {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+}
+.btn-success {
+    background-color: var(--success-green);
+    border-color: var(--success-green);
+    color: #1B3B00;
+}
+.btn-warning {
+    background-color: var(--warning-yellow);
+    border-color: var(--warning-yellow);
+    color: #2C1D00;
+}
+
+/* Sidebar Navigation */
+.sidebar {
+    min-height: calc(100vh - 64px);
+    background: #FFFFFF;
+    border-right: 1px solid #E2E8F0;
+}
+
+.sidebar .nav-link {
+    color: #4A5568;
+    border-radius: var(--card-radius);
+    margin-bottom: 8px;
+    padding: 12px 16px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 500;
+}
+
+.sidebar .nav-link:hover, .sidebar .nav-link.active {
+    background-color: var(--primary-blue);
+    color: #FFFFFF !important;
+}
+
+/* Category Color Coding (Part 3) */
+.cat-hygiene { border-left: 8px solid #4A90D9 !important; background-color: #EBF4FC; }
+.cat-food    { border-left: 8px solid #7ED321 !important; background-color: #F2FAE9; }
+.cat-school  { border-left: 8px solid #F5A623 !important; background-color: #FEF6E7; }
+.cat-play    { border-left: 8px solid #9B51E0 !important; background-color: #F5EEFC; }
+
+.badge-hygiene { background-color: #4A90D9; color: #fff; }
+.badge-food    { background-color: #7ED321; color: #1B3B00; }
+.badge-school  { background-color: #F5A623; color: #2C1D00; }
+.badge-play    { background-color: #9B51E0; color: #fff; }
+
+/* Drag and Drop Schedule Creator (Part 3) */
+.activity-item {
+    cursor: grab;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
+}
+.activity-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+.drop-zone {
+    min-height: 420px;
+    border: 3px dashed #CBD5E0;
+    border-radius: var(--card-radius);
+    padding: 16px;
+    background-color: #FAFCFF;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+.drop-zone.drag-over {
+    border-color: var(--primary-blue);
+    background-color: #EBF4FC;
+}
+
+/* Child View Big Cards (Part 4) */
+.child-task-card {
+    border: 3px solid transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.child-task-card.completed {
+    border-color: var(--success-green) !important;
+    opacity: 0.85;
+    background-color: #F2FAE9 !important;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        min-height: auto;
+        border-right: none;
+        border-bottom: 1px solid #E2E8F0;
+    }
+}
