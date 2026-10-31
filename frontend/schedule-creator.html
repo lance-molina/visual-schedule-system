@@ -86,7 +86,7 @@
                             <input type="hidden" id="selectedTaskId">
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Activity Name</label>
-                                <input type="text" id="settingName" class="form-control" placeholder="Select or add a task" required>
+                                <input type="text" id="settingName" class="form-control" placeholder="Click a task in the timeline" required>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Category</label>
@@ -196,7 +196,10 @@
             selector.value = paramChild;
         }
 
-        selector.addEventListener('change', () => loadChildSchedule(selector.value));
+        selector.addEventListener('change', () => {
+            selectedTask = null;
+            loadChildSchedule(selector.value);
+        });
         if (children.length > 0) {
             loadChildSchedule(selector.value);
         }
@@ -221,8 +224,11 @@
             return;
         }
 
-        dropZone.innerHTML = currentTasks.map((t, index) => `
-            <div class="card p-3 shadow-sm cat-${t.category}" onclick="selectTaskForEdit(${t.id})" style="cursor:pointer;">
+        dropZone.innerHTML = currentTasks.map((t, index) => {
+            const isSelected = selectedTask && selectedTask.id === t.id;
+            return `
+            <div class="card p-3 shadow-sm timeline-card cat-${t.category} ${isSelected ? 'selected-task' : ''}"
+                 onclick="selectTaskForEdit(${t.id})" style="cursor:pointer;">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-3">
                         <i class="fa-solid ${t.icon} fa-2x"></i>
@@ -246,8 +252,8 @@
                         </button>
                     </div>
                 </div>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
     }
 
     async function addActivityToTimeline(presetIndex) {
@@ -266,8 +272,8 @@
             reminder: true
         });
         currentTasks = await api.get(`/tasks/${currentScheduleId}`);
-        renderTimeline();
         selectTaskForEdit(res.id);
+        showToast(`Added "${act.name}" to timeline!`);
     }
 
     function selectTaskForEdit(taskId) {
@@ -279,6 +285,7 @@
         document.getElementById('settingTime').value = selectedTask.task_time;
         document.getElementById('settingDuration').value = selectedTask.duration;
         document.getElementById('settingReminder').checked = selectedTask.reminder;
+        renderTimeline();
     }
 
     async function moveTask(index, direction) {
@@ -287,7 +294,6 @@
         const taskA = currentTasks[index];
         const taskB = currentTasks[targetIndex];
 
-        // Swap times so order persists cleanly
         const tempTime = taskA.task_time;
         await api.put(`/tasks/${taskA.id}`, { ...taskA, time: taskB.task_time });
         await api.put(`/tasks/${taskB.id}`, { ...taskB, time: tempTime });
@@ -297,15 +303,21 @@
 
     async function removeTask(taskId) {
         await api.delete(`/tasks/${taskId}`);
+        if (selectedTask && selectedTask.id === taskId) {
+            selectedTask = null;
+            document.getElementById('selectedTaskId').value = '';
+            document.getElementById('taskSettingsForm').reset();
+        }
         currentTasks = await api.get(`/tasks/${currentScheduleId}`);
         renderTimeline();
+        showToast('Task removed from timeline', 'danger');
     }
 
     document.getElementById('taskSettingsForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('selectedTaskId').value;
         if (!id) {
-            showToast('Click a task in the Daily Timeline first to edit its settings.');
+            showToast('Click a task in the Daily Timeline first to edit its settings.', 'danger');
             return;
         }
         await api.put(`/tasks/${id}`, {
@@ -317,6 +329,7 @@
             reminder: document.getElementById('settingReminder').checked
         });
         currentTasks = await api.get(`/tasks/${currentScheduleId}`);
+        selectedTask = currentTasks.find(t => t.id == id);
         renderTimeline();
         showToast('Task settings updated!');
     });
