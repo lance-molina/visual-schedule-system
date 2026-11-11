@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | Visual Schedule System</title>
+    <title>Caregiver Dashboard | Visual Schedule System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 </head>
 <body>
 
-<!-- Responsive Top Navbar -->
 <nav class="navbar navbar-expand-md bg-white border-bottom px-3 py-2">
     <div class="container-fluid">
         <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2" href="dashboard.html">
@@ -21,8 +20,8 @@
         </button>
         <div class="d-none d-md-flex align-items-center gap-3">
             <div class="text-end">
-                <div id="navUserName" class="fw-bold">Maria Santos</div>
-                <small id="navUserRole" class="text-muted">Caregiver</small>
+                <div id="navUserName" class="fw-bold">Caregiver</div>
+                <small id="navUserRole" class="text-muted">Role</small>
             </div>
             <button onclick="api.logout()" class="btn btn-outline-danger btn-sm">
                 <i class="fa-solid fa-right-from-bracket me-1"></i> <span data-i18n="logout">Logout</span>
@@ -33,17 +32,15 @@
 
 <div class="container-fluid">
     <div class="row">
-        <!-- Sidebar Navigation -->
+        <!-- Sidebar -->
         <div class="col-md-3 col-lg-2 sidebar collapse d-md-block p-3" id="sidebarMenu">
             <nav class="nav flex-column">
-                <a class="nav-link" href="dashboard.html"><i class="fa-solid fa-house"></i> <span data-i18n="dashboard">Dashboard</span></a>
+                <a class="nav-link active" href="dashboard.html"><i class="fa-solid fa-house"></i> <span data-i18n="dashboard">Dashboard</span></a>
                 <a class="nav-link" href="schedule-creator.html"><i class="fa-solid fa-calendar-plus"></i> <span data-i18n="schedules">Schedule Creator</span></a>
                 <a class="nav-link" href="child-view.html"><i class="fa-solid fa-child-reaching"></i> <span data-i18n="childView">Child View</span></a>
+                <a class="nav-link" href="communication.html"><i class="fa-solid fa-comments"></i> <span data-i18n="talkingBoard">Talking Board</span></a>
                 <a class="nav-link" href="progress.html"><i class="fa-solid fa-chart-column"></i> <span data-i18n="progress">Progress</span></a>
                 <a class="nav-link" href="settings.html"><i class="fa-solid fa-gear"></i> <span data-i18n="settings">Settings</span></a>
-                <button onclick="api.logout()" class="btn btn-outline-danger d-md-none mt-3 w-100">
-                    <i class="fa-solid fa-right-from-bracket me-1"></i> Logout
-                </button>
             </nav>
         </div>
 
@@ -52,9 +49,9 @@
             <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
                 <div>
                     <h2 class="fw-bold mb-0">Caregiver Dashboard</h2>
-                    <p class="text-muted mb-0">Manage child profiles and monitor daily task progress</p>
+                    <p class="text-muted mb-0">Manage child profiles and daily visual schedules</p>
                 </div>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#childModal" onclick="openAddModal()">
+                <button class="btn btn-primary" onclick="openAddChildModal()">
                     <i class="fa-solid fa-plus me-2"></i> Add New Child
                 </button>
             </div>
@@ -63,46 +60,46 @@
             <div class="row g-3 mb-4">
                 <div class="col-sm-4">
                     <div class="card border-0 shadow-sm p-3">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted">Total Children</div>
-                                <h2 id="statChildren" class="fw-bold mb-0">0</h2>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-primary bg-opacity-10 text-primary p-3">
+                                <i class="fa-solid fa-children fa-xl"></i>
                             </div>
-                            <div class="rounded-circle p-3" style="background:#EBF4FC; color:#4A90D9;">
-                                <i class="fa-solid fa-children fa-2x"></i>
+                            <div>
+                                <div class="text-muted small">Total Children</div>
+                                <h3 id="statTotalChildren" class="fw-bold mb-0">0</h3>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-sm-4">
                     <div class="card border-0 shadow-sm p-3">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted">Tasks Completed Today</div>
-                                <h2 id="statCompleted" class="fw-bold mb-0">0</h2>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-success bg-opacity-10 text-success p-3">
+                                <i class="fa-solid fa-circle-check fa-xl"></i>
                             </div>
-                            <div class="rounded-circle p-3" style="background:#F2FAE9; color:#7ED321;">
-                                <i class="fa-solid fa-circle-check fa-2x"></i>
+                            <div>
+                                <div class="text-muted small">Tasks Completed Today</div>
+                                <h3 id="statCompletedToday" class="fw-bold mb-0">0</h3>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-sm-4">
                     <div class="card border-0 shadow-sm p-3">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <div class="text-muted">Upcoming Routines</div>
-                                <h2 id="statUpcoming" class="fw-bold mb-0">0</h2>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-warning bg-opacity-10 text-warning p-3">
+                                <i class="fa-solid fa-clock fa-xl"></i>
                             </div>
-                            <div class="rounded-circle p-3" style="background:#FEF6E7; color:#F5A623;">
-                                <i class="fa-solid fa-clock fa-2x"></i>
+                            <div>
+                                <div class="text-muted small">Upcoming Routines</div>
+                                <h3 id="statUpcoming" class="fw-bold mb-0">0</h3>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Child Profiles Grid -->
+            <!-- Child Profile Cards Grid -->
             <h4 class="fw-bold mb-3">Child Profiles</h4>
             <div id="childrenGrid" class="row g-4"></div>
         </main>
@@ -111,55 +108,64 @@
 
 <!-- Add / Edit Child Modal -->
 <div class="modal fade" id="childModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form id="childForm" class="modal-content">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
             <div class="modal-header">
-                <h5 id="modalTitle" class="modal-title fw-bold">Add New Child</h5>
+                <h5 id="childModalTitle" class="modal-title fw-bold">Add New Child</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <input type="hidden" id="childId">
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Child Name</label>
-                    <input type="text" id="childName" class="form-control" required>
-                </div>
-                <div class="row g-2 mb-3">
-                    <div class="col-6">
-                        <label class="form-label fw-semibold">Age (Years)</label>
-                        <input type="number" id="childAge" class="form-control" min="1" max="18" required>
+            <form id="childForm">
+                <div class="modal-body">
+                    <input type="hidden" id="childId">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Child Name</label>
+                        <input type="text" id="childName" class="form-control" required>
                     </div>
-                    <div class="col-6">
-                        <label class="form-label fw-semibold">Gender</label>
-                        <select id="childGender" class="form-select" required>
-                            <option value="Male">Male (Boy)</option>
-                            <option value="Female">Female (Girl)</option>
-                        </select>
+                    <div class="row g-2 mb-3">
+                        <div class="col-4">
+                            <label class="form-label fw-semibold">Age</label>
+                            <input type="number" id="childAge" class="form-control" min="1" max="18" required>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label fw-semibold">Gender</label>
+                            <select id="childGender" class="form-select" required>
+                                <option value="Male">Boy (Male)</option>
+                                <option value="Female">Girl (Female)</option>
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label fw-semibold">Delay Domain</label>
+                            <select id="childDomain" class="form-select" onchange="toggleCustomDomainInput()" required>
+                                <option value="Autism Spectrum Disorder (ASD)">Autism Spectrum Disorder (ASD)</option>
+                                <option value="Speech & Language Delay">Speech & Language Delay</option>
+                                <option value="Fine Motor Delay">Fine Motor Delay</option>
+                                <option value="Gross Motor Delay">Gross Motor Delay</option>
+                                <option value="ADHD / Sensory Processing">ADHD / Sensory Processing</option>
+                                <option value="Global Developmental Delay (GDD)">Global Developmental Delay (GDD)</option>
+                                <option value="Others">Others (Specify)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Custom Delay Domain Input (Shown when "Others" is chosen) -->
+                    <div id="customDomainWrapper" class="mb-3 d-none">
+                        <label class="form-label fw-semibold text-primary">Specify Developmental Delay Domain</label>
+                        <input type="text" id="childCustomDomain" class="form-control" placeholder="e.g. Down Syndrome, Auditory Processing Delay">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Photo / Avatar URL (Optional)</label>
+                        <input type="url" id="childPhoto" class="form-control" placeholder="Leave blank for default boy/girl avatar">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">Caregiver / OT Notes</label>
+                        <textarea id="childNotes" class="form-control" rows="3" placeholder="Sensory preferences, favorite rewards..."></textarea>
                     </div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Developmental Delay Domain</label>
-                    <select id="childDomain" class="form-select" required>
-                        <option value="Autism Spectrum Disorder (ASD)">Autism Spectrum Disorder (ASD)</option>
-                        <option value="Speech & Language Delay">Speech & Language Delay</option>
-                        <option value="Fine Motor Delay">Fine Motor Delay</option>
-                        <option value="Cognitive / Global Delay">Cognitive / Global Delay</option>
-                        <option value="ADHD / Sensory Processing">ADHD / Sensory Processing</option>
-                    </select>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Child Profile</button>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Avatar / Photo URL (Optional)</label>
-                    <input type="url" id="childPhoto" class="form-control" placeholder="Leave blank for default child avatar">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Caregiver / OT Notes</label>
-                    <textarea id="childNotes" class="form-control" rows="3"></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary">Save Child Profile</button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -173,64 +179,85 @@
     let childrenList = [];
     const childModal = new bootstrap.Modal(document.getElementById('childModal'));
 
+    const standardDomains = [
+        'Autism Spectrum Disorder (ASD)',
+        'Speech & Language Delay',
+        'Fine Motor Delay',
+        'Gross Motor Delay',
+        'ADHD / Sensory Processing',
+        'Global Developmental Delay (GDD)'
+    ];
+
+    function toggleCustomDomainInput() {
+        const domainSelect = document.getElementById('childDomain');
+        const customWrapper = document.getElementById('customDomainWrapper');
+        const customInput = document.getElementById('childCustomDomain');
+        const isOthers = domainSelect.value === 'Others';
+        customWrapper.classList.toggle('d-none', !isOthers);
+        customInput.required = isOthers;
+    }
+
     async function loadDashboard() {
         try {
             const [stats, children] = await Promise.all([
                 api.get('/stats'),
                 api.get('/children')
             ]);
+            childrenList = children;
 
-            document.getElementById('statChildren').textContent = stats.total_children;
-            document.getElementById('statCompleted').textContent = stats.completed_today;
+            document.getElementById('statTotalChildren').textContent = stats.total_children;
+            document.getElementById('statCompletedToday').textContent = stats.completed_today;
             document.getElementById('statUpcoming').textContent = stats.upcoming_routines;
 
-            childrenList = children;
             const grid = document.getElementById('childrenGrid');
             if (!children.length) {
-                grid.innerHTML = `<div class="col-12"><div class="alert alert-info">No child profiles yet. Click "Add New Child" to begin.</div></div>`;
+                grid.innerHTML = `<div class="col-12"><div class="alert alert-info">No child profiles yet. Click "Add New Child" to create one.</div></div>`;
                 return;
             }
 
-            grid.innerHTML = children.map(c => {
-                const total = c.total_tasks || 0;
-                const done = c.completed_tasks || 0;
+            grid.innerHTML = children.map(child => {
+                const total = child.total_tasks || 0;
+                const done = child.completed_tasks || 0;
                 const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                const avatarSrc = getChildAvatar(child);
+                const genderBadge = child.gender === 'Female' ? 'Girl' : 'Boy';
 
                 return `
                 <div class="col-md-6 col-xl-4">
                     <div class="card border-0 shadow-sm h-100 p-3">
                         <div class="d-flex align-items-center gap-3 mb-3">
-                            <img src="${getChildAvatar(c)}" alt="${c.name}" class="rounded-circle border" style="width:68px; height:68px; object-fit:cover;">
+                            <img src="${avatarSrc}"
+                                 alt="${child.name}" class="rounded-circle border" style="width:68px; height:68px; object-fit:cover;">
                             <div>
-                                <h5 class="fw-bold mb-0">${c.name}</h5>
-                                <div class="my-1">
-                                    <span class="badge bg-primary">${c.age} yrs old</span>
-                                    <span class="badge bg-secondary">${c.gender || 'Male'}</span>
+                                <h5 class="fw-bold mb-0">${child.name}</h5>
+                                <div class="d-flex flex-wrap gap-1 my-1">
+                                    <span class="badge bg-primary bg-opacity-10 text-primary">Age ${child.age}</span>
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">${genderBadge}</span>
                                 </div>
-                                <div class="small text-muted">${c.delay_domain}</div>
+                                <div class="small text-muted fw-semibold">${child.delay_domain}</div>
                             </div>
                         </div>
-                        <p class="small text-muted flex-grow-1">${c.notes || 'No additional notes.'}</p>
+                        <p class="small text-secondary mb-3 flex-grow-1">${child.notes || 'No additional notes recorded.'}</p>
                         <div class="mb-3">
                             <div class="d-flex justify-content-between small fw-semibold mb-1">
-                                <span>Daily Progress (${done}/${total} tasks)</span>
-                                <span>${pct}%</span>
+                                <span>Daily Progress</span>
+                                <span>${done}/${total} tasks (${pct}%)</span>
                             </div>
                             <div class="progress" style="height: 12px; border-radius: 8px;">
                                 <div class="progress-bar bg-success" role="progressbar" style="width: ${pct}%"></div>
                             </div>
                         </div>
-                        <div class="d-flex gap-2">
-                            <a href="schedule-creator.html?child_id=${c.id}" class="btn btn-primary btn-sm flex-grow-1">
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="schedule-creator.html?child_id=${child.id}" class="btn btn-primary btn-sm flex-grow-1">
                                 <i class="fa-solid fa-calendar-plus me-1"></i> Schedule
                             </a>
-                            <a href="child-view.html?child_id=${c.id}" class="btn btn-success btn-sm flex-grow-1">
-                                <i class="fa-solid fa-play me-1"></i> Child View
+                            <a href="child-view.html?child_id=${child.id}" class="btn btn-warning btn-sm flex-grow-1">
+                                <i class="fa-solid fa-child-reaching me-1"></i> Child View
                             </a>
-                            <button onclick="openEditModal(${c.id})" class="btn btn-outline-secondary btn-sm" title="Edit">
+                            <button onclick="openEditChildModal(${child.id})" class="btn btn-outline-secondary btn-sm" title="Edit Profile">
                                 <i class="fa-solid fa-pen"></i>
                             </button>
-                            <button onclick="deleteChildProfile(${c.id})" class="btn btn-outline-danger btn-sm" title="Delete">
+                            <button onclick="deleteChildProfile(${child.id})" class="btn btn-outline-danger btn-sm" title="Delete Profile">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </div>
@@ -242,52 +269,73 @@
         }
     }
 
-    function openAddModal() {
-        document.getElementById('modalTitle').textContent = 'Add New Child';
-        document.getElementById('childId').value = '';
+    function openAddChildModal() {
+        document.getElementById('childModalTitle').textContent = 'Add New Child';
         document.getElementById('childForm').reset();
-    }
-
-    function openEditModal(id) {
-        const c = childrenList.find(item => item.id === id);
-        if (!c) return;
-        document.getElementById('modalTitle').textContent = 'Edit Child Profile';
-        document.getElementById('childId').value = c.id;
-        document.getElementById('childName').value = c.name;
-        document.getElementById('childAge').value = c.age;
-        document.getElementById('childGender').value = c.gender || 'Male';
-        document.getElementById('childDomain').value = c.delay_domain;
-        document.getElementById('childPhoto').value = c.photo_url || '';
-        document.getElementById('childNotes').value = c.notes || '';
+        document.getElementById('childId').value = '';
+        document.getElementById('childGender').value = 'Male';
+        document.getElementById('childDomain').value = 'Autism Spectrum Disorder (ASD)';
+        toggleCustomDomainInput();
         childModal.show();
     }
 
-    async function deleteChildProfile(id) {
-        if (!confirm('Delete this child profile and their schedules?')) return;
-        await api.delete(`/children/${id}`);
-        loadDashboard();
+    function openEditChildModal(id) {
+        const child = childrenList.find(c => c.id === id);
+        if (!child) return;
+        document.getElementById('childModalTitle').textContent = 'Edit Child Profile';
+        document.getElementById('childId').value = child.id;
+        document.getElementById('childName').value = child.name;
+        document.getElementById('childAge').value = child.age;
+        document.getElementById('childGender').value = child.gender || 'Male';
+
+        if (standardDomains.includes(child.delay_domain)) {
+            document.getElementById('childDomain').value = child.delay_domain;
+            document.getElementById('childCustomDomain').value = '';
+        } else {
+            document.getElementById('childDomain').value = 'Others';
+            document.getElementById('childCustomDomain').value = child.delay_domain;
+        }
+        toggleCustomDomainInput();
+
+        document.getElementById('childPhoto').value = child.photo_url || '';
+        document.getElementById('childNotes').value = child.notes || '';
+        childModal.show();
     }
 
     document.getElementById('childForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('childId').value;
+        const selectedDomain = document.getElementById('childDomain').value;
+        const finalDomain = selectedDomain === 'Others'
+            ? document.getElementById('childCustomDomain').value.trim()
+            : selectedDomain;
+
         const payload = {
             name: document.getElementById('childName').value.trim(),
             age: parseInt(document.getElementById('childAge').value, 10),
             gender: document.getElementById('childGender').value,
-            delay_domain: document.getElementById('childDomain').value,
+            delay_domain: finalDomain || 'Other Developmental Delay',
             photo_url: document.getElementById('childPhoto').value.trim(),
             notes: document.getElementById('childNotes').value.trim()
         };
 
         if (id) {
             await api.put(`/children/${id}`, payload);
+            showToast('Child profile updated!');
         } else {
             await api.post('/children', payload);
+            showToast('New child profile created!');
         }
         childModal.hide();
         loadDashboard();
     });
+
+    async function deleteChildProfile(id) {
+        if (!confirm('Remove this child profile and all associated schedules?')) return;
+        await api.delete(`/children/${id}`);
+        showToast('Child profile deleted.', 'danger');
+        loadDashboard();
+    }
 
     loadDashboard();
 </script>
