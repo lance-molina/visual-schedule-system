@@ -34,8 +34,9 @@
         <div class="col-md-3 col-lg-2 sidebar collapse d-md-block p-3" id="sidebarMenu">
             <nav class="nav flex-column">
                 <a class="nav-link" href="dashboard.html"><i class="fa-solid fa-house"></i> <span data-i18n="dashboard">Dashboard</span></a>
-                <a class="nav-link" href="schedule-creator.html"><i class="fa-solid fa-calendar-plus"></i> <span data-i18n="schedules">Schedule Creator</span></a>
+                <a class="nav-link active" href="schedule-creator.html"><i class="fa-solid fa-calendar-plus"></i> <span data-i18n="schedules">Schedule Creator</span></a>
                 <a class="nav-link" href="child-view.html"><i class="fa-solid fa-child-reaching"></i> <span data-i18n="childView">Child View</span></a>
+                <a class="nav-link" href="communication.html"><i class="fa-solid fa-comments"></i> <span data-i18n="talkingBoard">Talking Board</span></a>
                 <a class="nav-link" href="progress.html"><i class="fa-solid fa-chart-column"></i> <span data-i18n="progress">Progress</span></a>
                 <a class="nav-link" href="settings.html"><i class="fa-solid fa-gear"></i> <span data-i18n="settings">Settings</span></a>
             </nav>
@@ -46,24 +47,33 @@
             <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
                 <div>
                     <h2 class="fw-bold mb-0">Visual Schedule Creator</h2>
-                    <p class="text-muted mb-0">Drag activities into the timeline or tap "+" to add</p>
+                    <p class="text-muted mb-0">Filter by category, then drag activities into the timeline or tap "+" to add</p>
                 </div>
                 <div class="d-flex flex-wrap align-items-center gap-2">
                     <label class="fw-semibold text-nowrap mb-0">Select Child:</label>
                     <select id="childSelector" class="form-select w-auto" style="min-width: 200px;"></select>
-                    <button onclick="previewInChildView()" class="btn btn-warning text-nowrap px-3">
+                    <button onclick="openPreviewModal()" class="btn btn-warning text-nowrap px-3">
                         <i class="fa-solid fa-eye me-2"></i>Preview Schedule
                     </button>
                 </div>
             </div>
 
             <div class="row g-4">
-                <!-- LEFT PANEL: Activity Library -->
+                <!-- LEFT PANEL: Activity Library with Category Filter -->
                 <div class="col-lg-3">
                     <div class="card border-0 shadow-sm p-3 h-100">
-                        <h5 class="fw-bold mb-3"><i class="fa-solid fa-shapes me-2 text-primary"></i>Activity Library</h5>
-                        <p class="small text-muted">Drag to center timeline or click <strong>+</strong></p>
-                        <div id="activityLibrary" class="d-flex flex-column gap-2"></div>
+                        <h5 class="fw-bold mb-2"><i class="fa-solid fa-shapes me-2 text-primary"></i>Activity Library</h5>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted mb-1">Filter by Category</label>
+                            <select id="libraryCategoryFilter" class="form-select form-select-sm" onchange="renderActivityLibrary()">
+                                <option value="all">All Categories (18)</option>
+                                <option value="hygiene">Hygiene (Blue)</option>
+                                <option value="food">Food / Meals (Green)</option>
+                                <option value="school">School / Learning (Yellow)</option>
+                                <option value="play">Play / Recreation (Purple)</option>
+                            </select>
+                        </div>
+                        <div id="activityLibrary" class="d-flex flex-column gap-2" style="max-height: 520px; overflow-y: auto; padding-right: 4px;"></div>
                     </div>
                 </div>
 
@@ -125,6 +135,37 @@
     </div>
 </div>
 
+<!-- =========================================================
+     IN-PAGE SCHEDULE PREVIEW MODAL
+     ========================================================= -->
+<div class="modal fade" id="previewScheduleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="fa-solid fa-eye me-2"></i>Child View Schedule Preview — <span id="previewChildName">Child</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" style="background-color: var(--bg-soft);">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted small"><i class="fa-solid fa-circle-info me-1"></i>This is a live preview of how the schedule will appear to the child.</span>
+                    <span id="previewTaskSummary" class="badge bg-primary fs-6">0 Tasks</span>
+                </div>
+                <div id="previewTasksList" class="d-flex flex-column gap-3"></div>
+            </div>
+            <div class="modal-footer bg-white">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-pen me-2"></i>Continue Editing
+                </button>
+                <button type="button" class="btn btn-primary" onclick="launchFullChildView()">
+                    <i class="fa-solid fa-up-right-from-square me-2"></i>Switch to Full Child View
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/api.js"></script>
 <script src="js/script.js"></script>
@@ -133,24 +174,48 @@
     renderNavbarAndSidebar('schedule-creator.html');
 
     const presetActivities = [
-        { name: 'Eating Meal', category: 'food', icon: 'fa-utensils', duration: 25 },
+        // Hygiene (Blue)
         { name: 'Brushing Teeth', category: 'hygiene', icon: 'fa-tooth', duration: 10 },
+        { name: 'Washing Hands', category: 'hygiene', icon: 'fa-hands-bubbles', duration: 5 },
+        { name: 'Taking a Bath', category: 'hygiene', icon: 'fa-bath', duration: 20 },
         { name: 'Dressing Up', category: 'hygiene', icon: 'fa-shirt', duration: 15 },
         { name: 'Toileting', category: 'hygiene', icon: 'fa-restroom', duration: 10 },
-        { name: 'Washing Hands', category: 'hygiene', icon: 'fa-hands-bubbles', duration: 5 },
+        { name: 'Grooming & Hair', category: 'hygiene', icon: 'fa-spray-can-sparkles', duration: 10 },
+        // Food / Meals (Green)
+        { name: 'Eating Breakfast', category: 'food', icon: 'fa-mug-saucer', duration: 25 },
+        { name: 'Eating Meal', category: 'food', icon: 'fa-utensils', duration: 30 },
+        { name: 'Drinking Water', category: 'food', icon: 'fa-glass-water', duration: 5 },
+        { name: 'Healthy Fruit Snack', category: 'food', icon: 'fa-apple-whole', duration: 15 },
+        // School / Learning (Yellow)
         { name: 'School Reading', category: 'school', icon: 'fa-book-open', duration: 30 },
-        { name: 'Play with Blocks', category: 'play', icon: 'fa-shapes', duration: 20 }
+        { name: 'Writing & Drawing', category: 'school', icon: 'fa-pencil', duration: 25 },
+        { name: 'Puzzle & Sorting', category: 'school', icon: 'fa-puzzle-piece', duration: 20 },
+        { name: 'Speech Practice', category: 'school', icon: 'fa-comments', duration: 20 },
+        { name: 'Pack School Bag', category: 'school', icon: 'fa-briefcase', duration: 10 },
+        // Play / Recreation (Purple)
+        { name: 'Play with Blocks', category: 'play', icon: 'fa-shapes', duration: 20 },
+        { name: 'Outdoor Ball Play', category: 'play', icon: 'fa-futbol', duration: 30 },
+        { name: 'Music & Listening', category: 'play', icon: 'fa-music', duration: 15 },
+        { name: 'Quiet Rest Time', category: 'play', icon: 'fa-bed', duration: 30 }
     ];
 
+    let childrenList = [];
     let currentChildId = null;
     let currentScheduleId = null;
     let currentTasks = [];
     let selectedTask = null;
+    let previewModalInstance = null;
 
     function renderActivityLibrary() {
         const lib = document.getElementById('activityLibrary');
-        lib.innerHTML = presetActivities.map((act, idx) => `
-            <div class="card p-2 activity-item cat-${act.category}" draggable="true" ondragstart="onDragStart(event, ${idx})">
+        const filterVal = document.getElementById('libraryCategoryFilter').value;
+
+        const filtered = presetActivities
+            .map((act, idx) => ({ ...act, originalIndex: idx }))
+            .filter(act => filterVal === 'all' || act.category === filterVal);
+
+        lib.innerHTML = filtered.map(act => `
+            <div class="card p-2 activity-item cat-${act.category}" draggable="true" ondragstart="onDragStart(event, ${act.originalIndex})">
                 <div class="d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center gap-2">
                         <i class="fa-solid ${act.icon} fa-lg"></i>
@@ -159,7 +224,7 @@
                             <span class="badge badge-${act.category} text-uppercase" style="font-size:10px;">${act.category}</span>
                         </div>
                     </div>
-                    <button class="btn btn-sm btn-light" onclick="addActivityToTimeline(${idx})" title="Add to Schedule">
+                    <button class="btn btn-sm btn-light" onclick="addActivityToTimeline(${act.originalIndex})" title="Add to Schedule">
                         <i class="fa-solid fa-plus"></i>
                     </button>
                 </div>
@@ -185,14 +250,15 @@
     });
 
     async function initPage() {
+        previewModalInstance = new bootstrap.Modal(document.getElementById('previewScheduleModal'));
         renderActivityLibrary();
-        const children = await api.get('/children');
+        childrenList = await api.get('/children');
         const selector = document.getElementById('childSelector');
-        selector.innerHTML = children.map(c => `<option value="${c.id}">${c.name} (${c.age} yrs)</option>`).join('');
+        selector.innerHTML = childrenList.map(c => `<option value="${c.id}">${c.name} (${c.age} yrs)</option>`).join('');
 
         const urlParams = new URLSearchParams(window.location.search);
         const paramChild = urlParams.get('child_id');
-        if (paramChild && children.some(c => c.id == paramChild)) {
+        if (paramChild && childrenList.some(c => c.id == paramChild)) {
             selector.value = paramChild;
         }
 
@@ -200,7 +266,7 @@
             selectedTask = null;
             loadChildSchedule(selector.value);
         });
-        if (children.length > 0) {
+        if (childrenList.length > 0) {
             loadChildSchedule(selector.value);
         }
     }
@@ -339,7 +405,52 @@
         showToast('Daily schedule saved to database!');
     }
 
-    function previewInChildView() {
+    function openPreviewModal() {
+        const child = childrenList.find(c => c.id == currentChildId);
+        document.getElementById('previewChildName').textContent = child ? child.name : 'Selected Child';
+        document.getElementById('previewTaskSummary').textContent = `${currentTasks.length} Scheduled Tasks`;
+
+        const container = document.getElementById('previewTasksList');
+        if (!currentTasks.length) {
+            container.innerHTML = `<div class="alert alert-secondary text-center mb-0">No tasks in this schedule yet. Add activities from the left panel first.</div>`;
+        } else {
+            container.innerHTML = currentTasks.map(t => {
+                const safeName = t.name.replace(/'/g, "\\'");
+                const isDone = t.status === 'completed';
+                return `
+                <div class="card p-3 shadow-sm cat-${t.category}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                                 style="width: 56px; height: 56px; background: #fff; color: #4A90D9;">
+                                <i class="fa-solid ${t.icon} fa-xl"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold mb-1">${t.name}</h5>
+                                <div class="text-muted small">
+                                    <i class="fa-regular fa-clock me-1"></i>${formatTime12Hr(t.task_time)} &bull; ${t.duration} mins
+                                    <span class="badge badge-${t.category} text-uppercase ms-2">${t.category}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="btn btn-light border btn-sm"
+                                    onclick="speakText('${safeName} at ${formatTime12Hr(t.task_time)}')" title="Test Audio Prompt">
+                                <i class="fa-solid fa-volume-high text-primary"></i>
+                            </button>
+                            <span class="badge ${isDone ? 'bg-success' : 'bg-secondary'} px-3 py-2">
+                                <i class="fa-solid ${isDone ? 'fa-circle-check' : 'fa-hourglass-half'} me-1"></i>
+                                ${isDone ? 'Completed' : 'Pending'}
+                            </span>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+        previewModalInstance.show();
+    }
+
+    function launchFullChildView() {
         window.location.href = `child-view.html?child_id=${currentChildId}`;
     }
 
