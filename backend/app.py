@@ -1,7 +1,10 @@
 import os
 import datetime
+import io
+import asyncio
+import edge_tts
 from functools import wraps
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import mysql.connector
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -470,6 +473,34 @@ def get_stats(current_user_id):
         'upcoming_routines': int(totals['pending_tasks'] or 0),
         'task_breakdown': task_breakdown
     }), 200
+
+@app.route('/api/tts', methods=['GET'])
+def generate_tts():
+    text = request.args.get('text', '').strip()
+    lang = request.args.get('lang', 'en-US')
+    rate_val = float(request.args.get('rate', 0.9))
+    if not text:
+        return jsonify({'error': 'Text is required'}), 400
+
+    # Natural Filipina female voices: Blessica (Tagalog) & Rosa (English)
+    voice = 'fil-PH-BlessicaNeural' if ('fil' in lang.lower() or 'tl' in lang.lower()) else 'en-PH-RosaNeural'
+    pct = int(round((rate_val - 1.0) * 100))
+    rate_str = f"{pct:+d}%"
+
+    async def _stream_audio():
+        communicate = edge_tts.Communicate(text, voice, rate=rate_str)
+        audio_buffer = io.BytesIO()
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                audio_buffer.write(chunk["data"])
+        audio_buffer.seek(0)
+        return audio_buffer
+
+    try:
+        mp3_io = asyncio.run(_stream_audio())
+        return send_file(mp3_io, mimetype='audio/mpeg')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
