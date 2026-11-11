@@ -49,7 +49,6 @@
                     <h2 class="fw-bold mb-0"><i class="fa-solid fa-comments text-primary me-2"></i>My Talking Board</h2>
                     <p class="text-muted mb-0">Tap picture cards to speak aloud and express needs</p>
                 </div>
-                <!-- Spaced Mode Buttons (without .bg-white hover bug) -->
                 <div class="d-flex flex-wrap gap-2">
                     <button type="button" id="btnChildMode" class="btn btn-primary px-4 shadow-sm" onclick="switchBoardMode('child')">
                         <i class="fa-solid fa-child-reaching me-2"></i>Child Board
@@ -122,9 +121,9 @@
                     </div>
 
                     <div class="col-lg-5">
-                        <div class="card border-0 shadow-sm p-4 mb-4">
+                        <div class="card border-0 shadow-sm p-4">
                             <h4 class="fw-bold mb-3">New Category</h4>
-                            <form id="addCategoryForm">
+                            <form id="addCategoryForm" class="mb-4">
                                 <div class="mb-3">
                                     <input type="text" id="newCategoryInput" class="form-control form-control-lg" placeholder="e.g. Toys" required>
                                 </div>
@@ -132,32 +131,12 @@
                                     <i class="fa-solid fa-plus me-2"></i>Add Category
                                 </button>
                             </form>
-                        </div>
 
-                        <div class="card border-0 shadow-sm p-4">
-                            <h4 class="fw-bold mb-3">Voice Settings</h4>
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Language</label>
-                                <select id="voiceLangSelect" class="form-select form-select-lg">
-                                    <option value="en-US">English</option>
-                                    <option value="fil-PH">Filipino (Tagalog)</option>
-                                </select>
-                            </div>
-                            <div class="mb-4">
-                                <div class="d-flex justify-content-between">
-                                    <label class="form-label fw-semibold">Speed</label>
-                                    <span id="voiceSpeedLabel" class="fw-bold text-primary">0.9x</span>
-                                </div>
-                                <input type="range" id="voiceSpeedRange" class="form-range" min="0.5" max="1.4" step="0.1" value="0.9">
-                            </div>
-                            <div class="d-grid gap-2">
-                                <button type="button" class="btn btn-primary btn-lg" onclick="testTalkingVoice()">
-                                    <i class="fa-solid fa-volume-high me-2"></i>Test Voice
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm mt-2" onclick="resetDefaultBoard()">
-                                    <i class="fa-solid fa-rotate-left me-1"></i>Reset Board to Defaults
-                                </button>
-                            </div>
+                            <hr class="my-3">
+
+                            <button type="button" class="btn btn-outline-secondary w-100" onclick="resetDefaultBoard()">
+                                <i class="fa-solid fa-rotate-left me-2"></i>Reset Board to Defaults
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -216,11 +195,13 @@
     let uploadedDataUrl = '';
 
     function getSentencePrefix() {
-        const isEmotions = activeCategory.trim().toLowerCase() === 'emotions';
+        const cat = activeCategory.trim().toLowerCase();
         if (getCurrentLang() === 'fil') {
-            return isEmotions ? 'Ako ay' : 'Gusto ko ng';
+            if (cat === 'emotions') return 'Ako ay';
+            if (cat === 'activities') return 'Gusto ko';
+            return 'Gusto ko ng';
         }
-        return isEmotions ? 'I feel' : 'I want';
+        return cat === 'emotions' ? 'I feel' : 'I want';
     }
 
     function saveBoardState() {
@@ -347,7 +328,7 @@
         }
         const isFil = getCurrentLang() === 'fil';
         const localizedWords = sentenceQueue.map(c => t(c.word));
-        const joinedWords = isFil ? localizedWords.join(' at ') : localizedWords.join(', ');
+        const joinedWords = isFil ? localizedWords.join(' at ') : localizedWords.join(' and ');
         speakText(`${prefix} ${joinedWords}`, true);
     }
 
@@ -419,38 +400,6 @@
         document.getElementById('newCategoryInput').value = '';
         showToast(`Category "${newCat}" created!`);
     });
-
-    // Sync Voice Language & Speed with Global Accessibility Settings
-    const savedVoice = JSON.parse(localStorage.getItem('vs_voice_cfg') || '{"lang":"en-US","rate":0.9}');
-    const speedInput = document.getElementById('voiceSpeedRange');
-    const langSelect = document.getElementById('voiceLangSelect');
-    speedInput.value = savedVoice.rate || 0.9;
-    langSelect.value = getCurrentLang() === 'fil' ? 'fil-PH' : 'en-US';
-    document.getElementById('voiceSpeedLabel').textContent = `${speedInput.value}x`;
-
-    function saveVoiceConfig() {
-        const cfg = {
-            lang: langSelect.value,
-            rate: parseFloat(speedInput.value)
-        };
-        localStorage.setItem('vs_voice_cfg', JSON.stringify(cfg));
-        document.getElementById('voiceSpeedLabel').textContent = `${cfg.rate}x`;
-        setAppLanguage(langSelect.value);
-        renderCategories();
-        renderSentenceStrip();
-        renderCards();
-    }
-
-    speedInput.addEventListener('input', saveVoiceConfig);
-    langSelect.addEventListener('change', saveVoiceConfig);
-
-    function testTalkingVoice() {
-        saveVoiceConfig();
-        const sample = getCurrentLang() === 'fil'
-            ? 'Gusto ko ng tubig at mansanas!'
-            : 'I want water and apple, please!';
-        speakText(sample, true);
-    }
 
     function resetDefaultBoard() {
         localStorage.removeItem('vs_aac_categories');
