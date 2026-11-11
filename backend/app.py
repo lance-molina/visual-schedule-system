@@ -482,8 +482,8 @@ def generate_tts():
     if not text:
         return jsonify({'error': 'Text is required'}), 400
 
-    # Natural Filipina female voices: Blessica (Tagalog) & Rosa (English)
-    voice = 'fil-PH-BlessicaNeural' if ('fil' in lang.lower() or 'tl' in lang.lower()) else 'en-PH-RosaNeural'
+    # Native Filipina female voice for Tagalog (Blessica) & Native US English female voice (Jenny)
+    voice = 'fil-PH-BlessicaNeural' if ('fil' in lang.lower() or 'tl' in lang.lower()) else 'en-US-JennyNeural'
     pct = int(round((rate_val - 1.0) * 100))
     rate_str = f"{pct:+d}%"
 
