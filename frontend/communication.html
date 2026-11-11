@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Talking Board | Visual Schedule & Communication System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-md bg-white border-bottom px-3 py-2">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2" href="dashboard.html">
+            <i class="fa-solid fa-calendar-check"></i> Visual Schedule
+        </a>
+        <button class="navbar-toggler touch-target" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="d-none d-md-flex align-items-center gap-3">
+            <div class="text-end">
+                <div id="navUserName" class="fw-bold">Caregiver</div>
+                <small id="navUserRole" class="text-muted">Role</small>
+            </div>
+            <button onclick="api.logout()" class="btn btn-outline-danger btn-sm">Logout</button>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 sidebar collapse d-md-block p-3" id="sidebarMenu">
+            <nav class="nav flex-column">
+                <a class="nav-link" href="dashboard.html"><i class="fa-solid fa-house"></i> <span data-i18n="dashboard">Dashboard</span></a>
+                <a class="nav-link" href="schedule-creator.html"><i class="fa-solid fa-calendar-plus"></i> <span data-i18n="schedules">Schedule Creator</span></a>
+                <a class="nav-link" href="child-view.html"><i class="fa-solid fa-child-reaching"></i> <span data-i18n="childView">Child View</span></a>
+                <a class="nav-link active" href="communication.html"><i class="fa-solid fa-comments"></i> <span data-i18n="talkingBoard">Talking Board</span></a>
+                <a class="nav-link" href="progress.html"><i class="fa-solid fa-chart-column"></i> <span data-i18n="progress">Progress</span></a>
+                <a class="nav-link" href="settings.html"><i class="fa-solid fa-gear"></i> <span data-i18n="settings">Settings</span></a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 col-lg-10 p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+                <div>
+                    <h2 class="fw-bold mb-0"><i class="fa-solid fa-comments text-primary me-2"></i>My Talking Board</h2>
+                    <p class="text-muted mb-0">Tap picture cards to speak aloud and express needs</p>
+                </div>
+                <!-- Spaced Mode Buttons (without .bg-white hover bug) -->
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" id="btnChildMode" class="btn btn-primary px-4 shadow-sm" onclick="switchBoardMode('child')">
+                        <i class="fa-solid fa-child-reaching me-2"></i>Child Board
+                    </button>
+                    <button type="button" id="btnCaregiverMode" class="btn btn-outline-primary px-4 shadow-sm" onclick="switchBoardMode('caregiver')">
+                        <i class="fa-solid fa-screwdriver-wrench me-2"></i>Caregiver Tools
+                    </button>
+                </div>
+            </div>
+
+            <!-- VIEW 1: CHILD TALKING BOARD -->
+            <div id="childBoardSection">
+                <div id="categoryTabs" class="d-flex flex-wrap gap-2 mb-3"></div>
+
+                <div class="sentence-strip mb-4">
+                    <div class="sentence-items">
+                        <span id="sentencePrefixBadge" class="badge bg-primary fs-5 px-3 py-2">I want</span>
+                        <div id="sentenceCardsContainer" class="d-flex flex-wrap gap-2 align-items-center">
+                            <span class="text-muted fst-italic">Tap any card below...</span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success btn-lg px-3" onclick="speakFullSentence()" title="Speak Full Sentence">
+                            <i class="fa-solid fa-volume-high me-2"></i>Speak
+                        </button>
+                        <button class="btn btn-outline-danger btn-lg px-3" onclick="clearSentence()" title="Clear Strip">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="cardsGrid" class="row g-3"></div>
+            </div>
+
+            <!-- VIEW 2: CAREGIVER TOOLS -->
+            <div id="caregiverToolsSection" class="d-none">
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <div class="card border-0 shadow-sm p-4 h-100">
+                            <h4 class="fw-bold mb-3">Add Picture Card</h4>
+                            <form id="addCardForm">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Word to speak</label>
+                                    <input type="text" id="cardWordInput" class="form-control form-control-lg" placeholder="e.g. Apple" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Category</label>
+                                    <select id="cardCategorySelect" class="form-select form-select-lg"></select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold d-block">Icon (Select Icon or Upload Photo)</label>
+                                    <div id="iconPickerGrid" class="d-flex flex-wrap gap-2 mb-3"></div>
+
+                                    <div class="d-flex align-items-center gap-3">
+                                        <label class="btn btn-outline-secondary mb-0">
+                                            <i class="fa-solid fa-camera me-2"></i>Upload own photo
+                                            <input type="file" id="customPhotoInput" accept="image/*" class="d-none">
+                                        </label>
+                                        <span id="uploadPreviewName" class="small text-success fw-semibold"></span>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary btn-lg w-100 mt-2">
+                                    <i class="fa-solid fa-plus me-2"></i>Save Card to Board
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5">
+                        <div class="card border-0 shadow-sm p-4 mb-4">
+                            <h4 class="fw-bold mb-3">New Category</h4>
+                            <form id="addCategoryForm">
+                                <div class="mb-3">
+                                    <input type="text" id="newCategoryInput" class="form-control form-control-lg" placeholder="e.g. Toys" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-lg w-100">
+                                    <i class="fa-solid fa-plus me-2"></i>Add Category
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="card border-0 shadow-sm p-4">
+                            <h4 class="fw-bold mb-3">Voice Settings</h4>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Language</label>
+                                <select id="voiceLangSelect" class="form-select form-select-lg">
+                                    <option value="en-US">English</option>
+                                    <option value="fil-PH">Filipino (Tagalog)</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between">
+                                    <label class="form-label fw-semibold">Speed</label>
+                                    <span id="voiceSpeedLabel" class="fw-bold text-primary">0.9x</span>
+                                </div>
+                                <input type="range" id="voiceSpeedRange" class="form-range" min="0.5" max="1.4" step="0.1" value="0.9">
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-primary btn-lg" onclick="testTalkingVoice()">
+                                    <i class="fa-solid fa-volume-high me-2"></i>Test Voice
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm mt-2" onclick="resetDefaultBoard()">
+                                    <i class="fa-solid fa-rotate-left me-1"></i>Reset Board to Defaults
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/script.js"></script>
+<script>
+    api.requireAuth();
+    renderNavbarAndSidebar('communication.html');
+
+    const presetIcons = [
+        'fa-glass-water', 'fa-bowl-rice', 'fa-mug-hot', 'fa-bread-slice',
+        'fa-apple-whole', 'fa-carrot', 'fa-cookie-bite', 'fa-utensils',
+        'fa-face-smile', 'fa-face-sad-tear', 'fa-face-angry', 'fa-face-tired',
+        'fa-face-surprise', 'fa-puzzle-piece', 'fa-futbol', 'fa-tv',
+        'fa-restroom', 'fa-bath', 'fa-music', 'fa-house', 'fa-book-open', 'fa-bed'
+    ];
+
+    const defaultCategories = ['Food', 'Emotions', 'Activities'];
+    const defaultCards = [
+        { id: 1, word: 'Water', category: 'Food', icon: 'fa-glass-water', image: '' },
+        { id: 2, word: 'Rice', category: 'Food', icon: 'fa-bowl-rice', image: '' },
+        { id: 3, word: 'Milk', category: 'Food', icon: 'fa-mug-hot', image: '' },
+        { id: 4, word: 'Bread', category: 'Food', icon: 'fa-bread-slice', image: '' },
+        { id: 5, word: 'Apple', category: 'Food', icon: 'fa-apple-whole', image: '' },
+        { id: 6, word: 'Snack', category: 'Food', icon: 'fa-cookie-bite', image: '' },
+        { id: 7, word: 'Play', category: 'Activities', icon: 'fa-puzzle-piece', image: '' },
+        { id: 8, word: 'Toilet', category: 'Activities', icon: 'fa-restroom', image: '' },
+        { id: 9, word: 'Watch TV', category: 'Activities', icon: 'fa-tv', image: '' },
+        { id: 10, word: 'Take a Bath', category: 'Activities', icon: 'fa-bath', image: '' },
+        { id: 11, word: 'Music', category: 'Activities', icon: 'fa-music', image: '' },
+        { id: 12, word: 'Go Home', category: 'Activities', icon: 'fa-house', image: '' },
+        { id: 13, word: 'Happy', category: 'Emotions', icon: 'fa-face-smile', image: '' },
+        { id: 14, word: 'Sad', category: 'Emotions', icon: 'fa-face-sad-tear', image: '' },
+        { id: 15, word: 'Angry', category: 'Emotions', icon: 'fa-face-angry', image: '' },
+        { id: 16, word: 'Sleepy', category: 'Emotions', icon: 'fa-face-tired', image: '' },
+        { id: 17, word: 'Surprised', category: 'Emotions', icon: 'fa-face-surprise', image: '' }
+    ];
+
+    let categories = JSON.parse(localStorage.getItem('vs_aac_categories') || 'null') || [...defaultCategories];
+    let savedCards = JSON.parse(localStorage.getItem('vs_aac_cards') || 'null');
+    if (!savedCards || savedCards.some(c => !c.icon || !c.icon.startsWith('fa-'))) {
+        savedCards = [...defaultCards];
+        localStorage.setItem('vs_aac_cards', JSON.stringify(savedCards));
+    }
+    let cards = savedCards;
+
+    let activeCategory = 'Food';
+    let sentenceQueue = [];
+    let selectedIcon = presetIcons[0];
+    let uploadedDataUrl = '';
+
+    function getSentencePrefix() {
+        const isEmotions = activeCategory.trim().toLowerCase() === 'emotions';
+        if (getCurrentLang() === 'fil') {
+            return isEmotions ? 'Ako ay' : 'Gusto ko ng';
+        }
+        return isEmotions ? 'I feel' : 'I want';
+    }
+
+    function saveBoardState() {
+        localStorage.setItem('vs_aac_categories', JSON.stringify(categories));
+        localStorage.setItem('vs_aac_cards', JSON.stringify(cards));
+    }
+
+    function switchBoardMode(mode) {
+        const isChild = mode === 'child';
+        document.getElementById('childBoardSection').classList.toggle('d-none', !isChild);
+        document.getElementById('caregiverToolsSection').classList.toggle('d-none', isChild);
+        document.getElementById('btnChildMode').className = isChild
+            ? 'btn btn-primary px-4 shadow-sm'
+            : 'btn btn-outline-primary px-4 shadow-sm';
+        document.getElementById('btnCaregiverMode').className = !isChild
+            ? 'btn btn-primary px-4 shadow-sm'
+            : 'btn btn-outline-primary px-4 shadow-sm';
+    }
+
+    function renderCategories() {
+        const tabContainer = document.getElementById('categoryTabs');
+        const catIcons = { Food: 'fa-utensils', Emotions: 'fa-face-smile', Activities: 'fa-shapes' };
+
+        tabContainer.innerHTML = categories.map(cat => {
+            const isActive = cat === activeCategory;
+            const icon = catIcons[cat] || 'fa-folder-open';
+            return `
+                <button class="btn ${isActive ? 'btn-warning' : 'btn-white border bg-white'} px-4 py-2 fs-5 shadow-sm"
+                        onclick="selectCategory('${cat}')">
+                    <i class="fa-solid ${icon} me-2"></i>${t(cat)}
+                </button>`;
+        }).join('');
+
+        const selectEl = document.getElementById('cardCategorySelect');
+        selectEl.innerHTML = categories.map(cat => `<option value="${cat}">${t(cat)}</option>`).join('');
+    }
+
+    function selectCategory(cat) {
+        if (activeCategory !== cat) {
+            sentenceQueue = [];
+        }
+        activeCategory = cat;
+        renderCategories();
+        renderSentenceStrip();
+        renderCards();
+    }
+
+    function renderCards() {
+        const grid = document.getElementById('cardsGrid');
+        const filtered = cards.filter(c => c.category === activeCategory);
+
+        if (!filtered.length) {
+            grid.innerHTML = `<div class="col-12"><div class="alert alert-info">No cards in "${t(activeCategory)}" yet. Switch to Caregiver Tools to add one.</div></div>`;
+            return;
+        }
+
+        grid.innerHTML = filtered.map(c => {
+            const isSelected = sentenceQueue.some(item => item.id === c.id);
+            const displayWord = t(c.word);
+            return `
+            <div class="col-6 col-sm-4 col-md-3">
+                <div class="talking-card shadow-sm position-relative ${isSelected ? 'selected-card' : ''}" onclick="onTapCard(${c.id})">
+                    ${isSelected ? '<span class="position-absolute top-0 end-0 m-2 badge rounded-pill bg-primary"><i class="fa-solid fa-check"></i></span>' : ''}
+                    ${c.image
+                        ? `<img src="${c.image}" alt="${displayWord}" class="talking-card-img">`
+                        : `<div class="talking-card-icon"><i class="fa-solid ${c.icon || 'fa-star'}"></i></div>`
+                    }
+                    <h4 class="fw-bold mb-0">${displayWord}</h4>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function onTapCard(cardId) {
+        const existingIndex = sentenceQueue.findIndex(c => c.id === cardId);
+        if (existingIndex !== -1) {
+            sentenceQueue.splice(existingIndex, 1);
+            renderSentenceStrip();
+            renderCards();
+            return;
+        }
+
+        const card = cards.find(c => c.id === cardId);
+        if (!card) return;
+        speakText(t(card.word), true);
+        if (sentenceQueue.length < 6) {
+            sentenceQueue.push(card);
+            renderSentenceStrip();
+            renderCards();
+        }
+    }
+
+    function removeSentenceCard(cardId) {
+        sentenceQueue = sentenceQueue.filter(c => c.id !== cardId);
+        renderSentenceStrip();
+        renderCards();
+    }
+
+    function renderSentenceStrip() {
+        const prefixBadge = document.getElementById('sentencePrefixBadge');
+        if (prefixBadge) {
+            prefixBadge.textContent = getSentencePrefix();
+        }
+
+        const container = document.getElementById('sentenceCardsContainer');
+        if (!sentenceQueue.length) {
+            container.innerHTML = `<span class="text-muted fst-italic">${t('Tap any card below...')}</span>`;
+            return;
+        }
+        container.innerHTML = sentenceQueue.map(c => `
+            <span class="sentence-chip" onclick="removeSentenceCard(${c.id})" title="Click to remove">
+                <i class="fa-solid ${c.image ? 'fa-image' : (c.icon || 'fa-star')} text-primary"></i>
+                <span>${t(c.word)}</span>
+                <i class="fa-solid fa-xmark text-muted small ms-1"></i>
+            </span>
+        `).join('');
+    }
+
+    function speakFullSentence() {
+        const prefix = getSentencePrefix();
+        if (!sentenceQueue.length) {
+            speakText(prefix, true);
+            return;
+        }
+        const isFil = getCurrentLang() === 'fil';
+        const localizedWords = sentenceQueue.map(c => t(c.word));
+        const joinedWords = isFil ? localizedWords.join(' at ') : localizedWords.join(', ');
+        speakText(`${prefix} ${joinedWords}`, true);
+    }
+
+    function clearSentence() {
+        sentenceQueue = [];
+        renderSentenceStrip();
+        renderCards();
+    }
+
+    function renderIconPicker() {
+        const grid = document.getElementById('iconPickerGrid');
+        grid.innerHTML = presetIcons.map(ic => `
+            <button type="button" class="icon-option ${ic === selectedIcon && !uploadedDataUrl ? 'selected' : ''}"
+                    onclick="pickIcon('${ic}')">
+                <i class="fa-solid ${ic}"></i>
+            </button>
+        `).join('');
+    }
+
+    function pickIcon(ic) {
+        selectedIcon = ic;
+        uploadedDataUrl = '';
+        document.getElementById('uploadPreviewName').textContent = '';
+        renderIconPicker();
+    }
+
+    document.getElementById('customPhotoInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            uploadedDataUrl = ev.target.result;
+            document.getElementById('uploadPreviewName').textContent = `Selected: ${file.name}`;
+            renderIconPicker();
+        };
+        reader.readAsDataURL(file);
+    });
+
+    document.getElementById('addCardForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const word = document.getElementById('cardWordInput').value.trim();
+        const category = document.getElementById('cardCategorySelect').value;
+        if (!word) return;
+
+        const newCard = {
+            id: Date.now(),
+            word,
+            category,
+            icon: selectedIcon,
+            image: uploadedDataUrl
+        };
+        cards.push(newCard);
+        saveBoardState();
+        selectCategory(category);
+        document.getElementById('cardWordInput').value = '';
+        uploadedDataUrl = '';
+        document.getElementById('uploadPreviewName').textContent = '';
+        showToast(`Added "${word}" card to ${t(category)}!`);
+        switchBoardMode('child');
+    });
+
+    document.getElementById('addCategoryForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newCat = document.getElementById('newCategoryInput').value.trim();
+        if (!newCat || categories.includes(newCat)) return;
+        categories.push(newCat);
+        saveBoardState();
+        selectCategory(newCat);
+        document.getElementById('newCategoryInput').value = '';
+        showToast(`Category "${newCat}" created!`);
+    });
+
+    // Sync Voice Language & Speed with Global Accessibility Settings
+    const savedVoice = JSON.parse(localStorage.getItem('vs_voice_cfg') || '{"lang":"en-US","rate":0.9}');
+    const speedInput = document.getElementById('voiceSpeedRange');
+    const langSelect = document.getElementById('voiceLangSelect');
+    speedInput.value = savedVoice.rate || 0.9;
+    langSelect.value = getCurrentLang() === 'fil' ? 'fil-PH' : 'en-US';
+    document.getElementById('voiceSpeedLabel').textContent = `${speedInput.value}x`;
+
+    function saveVoiceConfig() {
+        const cfg = {
+            lang: langSelect.value,
+            rate: parseFloat(speedInput.value)
+        };
+        localStorage.setItem('vs_voice_cfg', JSON.stringify(cfg));
+        document.getElementById('voiceSpeedLabel').textContent = `${cfg.rate}x`;
+        setAppLanguage(langSelect.value);
+        renderCategories();
+        renderSentenceStrip();
+        renderCards();
+    }
+
+    speedInput.addEventListener('input', saveVoiceConfig);
+    langSelect.addEventListener('change', saveVoiceConfig);
+
+    function testTalkingVoice() {
+        saveVoiceConfig();
+        const sample = getCurrentLang() === 'fil'
+            ? 'Gusto ko ng tubig at mansanas!'
+            : 'I want water and apple, please!';
+        speakText(sample, true);
+    }
+
+    function resetDefaultBoard() {
+        localStorage.removeItem('vs_aac_categories');
+        localStorage.removeItem('vs_aac_cards');
+        categories = [...defaultCategories];
+        cards = [...defaultCards];
+        selectCategory('Food');
+        showToast('Talking Board reset to default cards!');
+    }
+
+    renderCategories();
+    renderSentenceStrip();
+    renderCards();
+    renderIconPicker();
+</script>
+</body>
+</html>
