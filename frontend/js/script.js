@@ -169,10 +169,10 @@ const uiDictionaryFil = {
     'Banana': 'Saging',
     'Snack': 'Meryenda',
     'Play': 'Maglaro',
-    'Toilet': 'CR / Banyo',
+    'Toilet': 'Mag-CR / Banyo',
     'Watch TV': 'Manood ng TV',
     'Take a Bath': 'Maligo',
-    'Music': 'Musika',
+    'Music': 'Makinig sa musika',
     'Go Home': 'Umuwi sa Bahay',
     'Happy': 'Masaya',
     'Sad': 'Malungkot',
@@ -290,6 +290,7 @@ function translateDOMNodes(lang) {
         while ((node = walker.nextNode())) {
             const parentTag = node.parentElement ? node.parentElement.tagName : '';
             if (parentTag === 'SCRIPT' || parentTag === 'STYLE') continue;
+            if (node.parentElement && node.parentElement.id === 'sentencePrefixBadge') continue;
 
             const currentTrimmed = node.nodeValue.trim();
             if (!currentTrimmed) continue;
@@ -381,49 +382,101 @@ function playSuccessSound() {
 
 let currentTtsAudio = null;
 
+// Converts abbreviations & symbols into natural Filipino phonetics for TTS audio only
+function applyFilipinoSpeechPhonetics(text) {
+    return text
+        .replace(/Mag-CR\s*\/\s*Banyo/gi, 'Mag si ar, o banyo')
+        .replace(/CR\s*\/\s*Banyo/gi, 'si ar, o banyo')
+        .replace(/\bMag-CR\b/gi, 'Mag si ar')
+        .replace(/\bCR\b/g, 'si ar')
+        .replace(/\bTV\b/gi, 'ti vi')
+        .replace(/\s+\/\s+/g, ' o ');
+}
+
+// Converts "8:00 AM" or "8:30 PM" into phonetic English words so BlessicaNeural
+// reads time in the natural English way instead of translating digits into Tagalog
+function timeToEnglishPhonetics(timeStr) {
+    const match = String(timeStr).trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!match) return timeStr;
+
+    const hour = parseInt(match[1], 10);
+    const min = parseInt(match[2], 10);
+    const ampm = match[3].toUpperCase() === 'PM' ? 'pi em' : 'ey em';
+
+    const ones = [
+        '', 'wan', 'tu', 'tri', 'for', 'fayv',
+        'siks', 'seven', 'eyt', 'nayn', 'ten',
+        'ileven', 'twelv', 'tertin', 'fortin', 'fiftin',
+        'sikstin', 'seventin', 'eytin', 'nayntin'
+    ];
+    const tens = ['', '', 'twenti', 'terti', 'forti', 'fifti'];
+
+    const hourWord = ones[hour] || String(hour);
+    let minWord = '';
+
+    if (min === 0) {
+        minWord = ''; // e.g., "8:00 AM" -> "eyt ey em"
+    } else if (min < 10) {
+        minWord = `oh ${ones[min]}`; // e.g., "8:05 AM" -> "eyt oh fayv ey em"
+    } else if (min < 20) {
+        minWord = ones[min]; // e.g., "8:15 AM" -> "eyt fiftin ey em"
+    } else {
+        const tenPart = tens[Math.floor(min / 10)];
+        const onePart = min % 10 !== 0 ? ` ${ones[min % 10]}` : '';
+        minWord = `${tenPart}${onePart}`; // e.g., "8:30 AM" -> "eyt terti ey em"
+    }
+
+    return minWord ? `${hourWord} ${minWord} ${ampm}` : `${hourWord} ${ampm}`;
+}
+
 // Automatically localizes spoken phrases when Filipino mode is active
 function localizeSpokenPhrase(rawText, isFil) {
     const text = String(rawText).trim();
     if (!isFil) return text;
 
-    if (uiDictionaryFil[text]) return uiDictionaryFil[text];
+    let result = uiDictionaryFil[text] || text;
 
     // Pattern 1: "<Task Name> at <Time>" (from Child View & Preview speaker button)
     const atMatch = text.match(/^(.+)\s+at\s+(\d{1,2}:\d{2}\s*(?:AM|PM))$/i);
     if (atMatch) {
         const taskName = t(atMatch[1].trim());
-        return `${taskName}, ${atMatch[2]}`;
+        const spokenTime = timeToEnglishPhonetics(atMatch[2].trim());
+        result = `${taskName}, ${spokenTime}`;
     }
 
     // Pattern 2: "Great job finishing <Task Name>!" (from Child View completion)
     const doneMatch = text.match(/^Great job finishing\s+(.+)!$/i);
     if (doneMatch) {
         const taskName = t(doneMatch[1].trim());
-        return `Magaling! Natapos mo na ang ${taskName}!`;
+        result = `Magaling! Natapos mo na ang ${taskName}!`;
     }
 
     // Pattern 3: Visual Timer alerts
     if (text === 'Almost time! Wrap up soon.') {
-        return 'Malapit nang matapos ang oras!';
+        result = 'Malapit nang matapos ang oras!';
     }
     const timeUpMatch = text.match(/^Time is up for\s+(.+)!$/i);
     if (timeUpMatch) {
         const taskName = t(timeUpMatch[1].trim());
-        return `Tapos na ang oras para sa ${taskName}!`;
+        result = `Tapos na ang oras para sa ${taskName}!`;
     }
 
-    return text;
+    return applyFilipinoSpeechPhonetics(result);
 }
 
-function speakText(text, forceSpeak = false) {
+function speakText(text, forceSpeak = false, overrideLang = null, overrideRate = null) {
     const prefs = JSON.parse(localStorage.getItem('vs_prefs') || '{}');
     if (!forceSpeak && prefs.sound === false) return;
     if (!text) return;
 
-    const isFil = getCurrentLang() === 'fil';
+    const isFil = overrideLang !== null
+        ? (overrideLang === 'fil' || overrideLang === 'fil-PH')
+        : (getCurrentLang() === 'fil');
     const voiceCfg = JSON.parse(localStorage.getItem('vs_voice_cfg') || '{}');
     const targetLang = isFil ? 'fil-PH' : 'en-US';
-    const targetRate = parseFloat(voiceCfg.rate || 0.9);
+    const targetRate = overrideRate !== null
+        ? parseFloat(overrideRate)
+        : parseFloat(voiceCfg.rate || 0.9);
     const spokenText = localizeSpokenPhrase(text, isFil);
 
     if (currentTtsAudio) {
@@ -434,7 +487,7 @@ function speakText(text, forceSpeak = false) {
         window.speechSynthesis.cancel();
     }
 
-    // Stream natural Filipina female neural voice (Blessica / Rosa) from Flask backend
+    // Stream natural female neural voice (Blessica for Tagalog / Jenny for US English)
     const ttsUrl = `${API_BASE}/tts?text=${encodeURIComponent(spokenText)}&lang=${encodeURIComponent(targetLang)}&rate=${targetRate}`;
     currentTtsAudio = new Audio(ttsUrl);
     currentTtsAudio.play().catch(() => {
@@ -447,7 +500,7 @@ function speakText(text, forceSpeak = false) {
         const voices = window.speechSynthesis.getVoices();
         const femaleVoice = voices.find(v =>
             v.name.includes('Blessica') ||
-            v.name.includes('Rosa') ||
+            v.name.includes('Jenny') ||
             v.name.includes('Zira') ||
             v.name.toLowerCase().includes('female')
         );
