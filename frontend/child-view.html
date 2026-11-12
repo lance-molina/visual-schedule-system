@@ -34,9 +34,7 @@
     <div class="card border-0 shadow-sm p-4 mb-4" style="background: linear-gradient(135deg, #4A90D9, #357ABD); color: #fff;">
         <div class="row align-items-center g-3">
             <div class="col-md-7 d-flex align-items-center gap-3">
-                <img id="childAvatar" src=""
-                     alt="Child Avatar" class="rounded-circle border border-3 border-white"
-                     style="width: 80px; height: 80px; object-fit: cover; background: #fff;">
+                <div id="childAvatarWrapper"></div>
                 <div>
                     <h2 id="childGreeting" class="fw-bold mb-1">Hello!</h2>
                     <p class="mb-0 opacity-75">Tap the speaker, start the visual timer, or tap when finished!</p>
@@ -268,7 +266,7 @@
         const child = childrenData.find(c => c.id == childId);
         if (child) {
             document.getElementById('childGreeting').textContent = `Hi, ${child.name}!`;
-            document.getElementById('childAvatar').src = getChildAvatar(child);
+            document.getElementById('childAvatarWrapper').innerHTML = getChildAvatarHTML(child, 80);
         }
 
         const schedules = await api.get(`/schedules/${childId}`);
